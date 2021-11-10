@@ -48,13 +48,49 @@ caret::confusionMatrix(pred,obs)
 
 
 #Ejercicio 2
+#Apartado a y b
+tuneGrid<-data.frame(mtry=c(1,2,4,6))
 
-rf.caret<-train(Tipo~.,data=train,method="rf")
-mtry.class<-sqrt(ncol(train)-1)
-tuneGrid
+rf.caret<-train(Tipo~.,data=train,method="rf",ntree=300, tuneGrid = tuneGrid,
+                trControl=trainControl(method="cv",number = 10,selectionFunction = "oneSE"))
+
+final<-rf.caret$finalModel
+plot(final,main="Tasas de error OOB")
+legend("topright",colnames(final$err.rate),lty=1:5,col=1:6)
+
+#Apartado c
+library(randomForest)
+
+importance(final)
+varImpPlot(final)
+
+library(pdp)
+
+pdp1<-partial(final,"Outstate",train=train)
+p1<-plotPartial(pdp1)
+
+pdp2<-partial(final,"Enroll",train=train)
+p2<-plotPartial(pdp2)
+
+grid.arrange(p1,p2,ncol=2)
 
 
-# Ejercicio 3
+#####Falta con la librería vivi
+
+#Apartado d)
+obs<-test$Tipo
+head(predict(final,newdata = test))
+pred<-predict(final,newdata=test,type="class")
+table(obs,pred)
+
+caret::confusionMatrix(pred,obs)
+
+
+
+
+
+
+#Ejercicio 3
 #Apartado a)
 library(kernlab)
 set.seed(40)
