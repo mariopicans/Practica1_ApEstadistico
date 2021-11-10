@@ -1,5 +1,6 @@
 ---
-title: "Práctica 1 Grupo 4"
+title: "Práctica 1"
+subtitle: "Grupo 4"
 author: 
         - Iria Lago Portela
         
@@ -10,37 +11,212 @@ author:
         - David Bamio Martínez
         
 output: pdf_document
+header-includes:
+    - \renewcommand{\and}{\\}
 ---
 
 # Ejercicios
 
-1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) 
+```{r, warning=F, message=F, echo=F}
+# Librerías 
+ipak <- function(pkg){
+        new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+        if (length(new.pkg)) 
+                install.packages(new.pkg, dependencies = TRUE)
+        sapply(pkg, require, character.only = TRUE)
+}
+
+packages <- c("rpart", "rpart.plot", "caret", "randomForest", "pdp", "kernlab")
+ipak(packages)
+
+# Datos
+load("data/College4.RData")
+```
+
+Preparación de los datos: 
+
+```{r}
+unis <- College4[, colnames(College4) != "Private"]
+
+unis$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) #Factor y cambio de etiqueta
+
+#Proporción privada-pública
+table(unis$Tipo)
+
+#Semilla
+set.seed(40)
+
+nobs <- nrow(unis) #Filas
+itrain <- sample(nobs, 0.8 * nobs) 
+train <- unis[itrain, ] # M. Entrenamiento
+test <- unis[-itrain, ] # M. Prueba
+
+tree <- rpart(Tipo ~ ., data = train)
+
+#Gráfico
+rpart.plot(tree, main = "Árbol de clasificación Privada-Pública")
+```
+
+
+## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) 
     en privadas (`Private="Yes"`) o públicas (`Private="No"`).
 
-    a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
+### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
     
-    b. Representar e interpretar el árbol resultante.
-    
-    c. Evaluar la precisión, de las predicciones y de las estimaciones de la probabilidad, en la muestra de test.
+```{r}
+rpart.rules(tree, style = "tall")
+
+tree <- rpart(Tipo ~ ., data = train, cp = 0)
+plotcp(tree)
 
 
-2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante 
+xerror <- tree$cptable[,"xerror"]
+imin.xerror <- which.min(xerror)
+upper.xerror <- xerror[imin.xerror] + tree$cptable[imin.xerror, "xstd"]
+icp <- min(which(xerror <= upper.xerror))
+cp <- tree$cptable[icp, "CP"]
+tree <- prune(tree, cp = cp)
+
+```
+    
+    
+### b. Representar e interpretar el árbol resultante.
+    
+```{r}
+rpart.plot(tree, main = "Árbol de clasificación privada-pública")
+```
+Interpretación:
+    
+### c. Evaluar la precisión, de las predicciones y de las estimaciones de la probabilidad, en la muestra de test.
+    
+```{r}
+#Predicciones
+obs <- test$Tipo
+head(predict(tree, newdata = test))
+pred <- predict(tree, newdata = test, type = "class")
+table(obs, pred)
+
+confusionMatrix(pred,obs)
+```
+    
+
+
+## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante 
     el método `"rf"` del paquete `caret`.
 
-    a. Considerar 300 árboles y seleccionar el número de predictores empleados en cada división `mtry = c(1, 2, 4, 6)` mediante validación cruzada, con 10 grupos y empleando el criterio de un error  estándar de Breiman.
-
-    b. Representar la convergencia del error en las muestras OOB en el modelo final.
+### a. Considerar 300 árboles y seleccionar el número de predictores empleados en cada división `mtry = c(1, 2, 4, 6)` mediante validación cruzada, con 10 grupos y empleando el criterio de un error  estándar de Breiman.
     
-    c. Estudiar la importancia de las variables y el efecto de las principales empleando algún método gráfico (para la interpretación del modelo).
+```{r}
+tuneGrid <- data.frame(mtry = c(1, 2, 4, 6))
 
-    d. Evaluar la precisión de las predicciones en la muestra de test y comparar los resultados con los obtenidos con el modelo del ejercicio anterior.
+rf.caret <-
+    train(
+        Tipo ~ .,
+        data = train,
+        method = "rf",
+        ntree = 300,
+        tuneGrid = tuneGrid,
+        trControl = trainControl(
+            method = "cv",
+            number = 10,
+            selectionFunction = "oneSE"
+        )
+    )
 
+final <- rf.caret$finalModel
 
-3.  Realizar la clasificación anterior empleando SVM mediante la función `ksvm()` del paquete `kernlab`,
+```
 
-    a. Ajustar el modelo con las opciones por defecto.
+### b. Representar la convergencia del error en las muestras OOB en el modelo final.
     
-    b. Ajustar el modelo empleando validación cruzada con 10 grupos para seleccionar los valores "óptimos" de los hiperparámetros, considerando las posibles combinaciones de `sigma = c(0.01, 0.05, 0.1)` y `C = c(0.5, 1, 10)` (sin emplear el  paquete `caret`; ver Ejercicio 3.1 en *03-bagging_boosting-ejercicios.html*).
+```{r}
+plot(final, main = "Tasas de error OOB")
+legend("topright",
+       colnames(final$err.rate),
+       lty = 1:5,
+       col = 1:6)
+```
+    
+    
+### c. Estudiar la importancia de las variables y el efecto de las principales empleando algún método gráfico (para la interpretación del modelo).
+    
+```{r}
+importance(final)
+varImpPlot(final)
+
+pdp1 <- partial(final, "Outstate", train = train)
+p1 <- plotPartial(pdp1)
+
+pdp2 <- partial(final, "Enroll", train = train)
+p2 <- plotPartial(pdp2)
+grid.arrange(p1, p2, ncol = 2)
+```
+    
+
+### d. Evaluar la precisión de las predicciones en la muestra de test y comparar los resultados con los obtenidos con el modelo del ejercicio anterior.
+    
+```{r}
+obs <- test$Tipo
+head(predict(final, newdata = test))
+pred <- predict(final, newdata = test, type = "class")
+table(obs, pred)
+
+confusionMatrix(pred, obs)
+```
+    
+
+
+## 3.  Realizar la clasificación anterior empleando SVM mediante la función `ksvm()` del paquete `kernlab`,
+
+### a. Ajustar el modelo con las opciones por defecto.
+    
+```{r}
+set.seed(40)
+svm <- ksvm(Tipo ~ ., data = train)
+svm
+
+pred <- predict(svm, newdata = test)
+confusionMatrix(pred, test$Tipo)
+
+```
+    
+    
+### b. Ajustar el modelo empleando validación cruzada con 10 grupos para seleccionar los valores "óptimos" de los hiperparámetros, considerando las posibles combinaciones de `sigma = c(0.01, 0.05, 0.1)` y `C = c(0.5, 1, 10)` (sin emplear el  paquete `caret`; ver Ejercicio 3.1 en *03-bagging_boosting-ejercicios.html*).
+    
+```{r}
+tune.grid <- expand.grid(
+    sigma = c(0.01, 0.05, 0.1),
+    C = c(0.5, 1, 10),
+    error = NA
+)
+
+best.err <- Inf
+set.seed(40)
+for (i in 1:nrow(tune.grid)) {
+    fit <-
+        ksvm(
+            Tipo ~ .,
+            data = train[, ],
+            cross = 10,
+            C = tune.grid$C[i],
+            kpar = list(tune.grid$sigma[i])
+        )
+    fit.error <- fit@cross
+    tune.grid$error[i] <- fit.error
+    if (fit.error < best.err) {
+        final.model <- fit
+        best.err <- fit.error
+        best.tune <- tune.grid[i,]
+    }
+}
+
+final.model
+
+pred2 <- predict(final.model, newdata = test)
+confusionMatrix(pred2, test$Tipo)
+
+```
+    
      
-    c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
+### c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
      
