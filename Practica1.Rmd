@@ -58,8 +58,7 @@ rpart.plot(tree, main = "Árbol de clasificación Privada-Pública")
 ```
 
 
-## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) 
-    en privadas (`Private="Yes"`) o públicas (`Private="No"`).
+## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private="Yes"`) o públicas (`Private="No"`).
 
 ### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
     
@@ -101,8 +100,7 @@ confusionMatrix(pred,obs)
     
 
 
-## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante 
-    el método `"rf"` del paquete `caret`.
+## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante el método `"rf"` del paquete `caret`.
 
 ### a. Considerar 300 árboles y seleccionar el número de predictores empleados en cada división `mtry = c(1, 2, 4, 6)` mediante validación cruzada, con 10 grupos y empleando el criterio de un error  estándar de Breiman.
     
