@@ -17,6 +17,8 @@ header-includes:
 
 # Ejercicios
 
+En primer lugar vamos a cargar los datos y los paquetes necesarios para la realización de esta práctica:
+
 ```{r, warning=F, message=F, echo=F}
 # Librerías 
 ipak <- function(pkg){
@@ -31,41 +33,63 @@ ipak(packages)
 
 # Datos
 load("data/College4.RData")
+head(College4)
+dim(College4)
 ```
+Este conjunto de datos está formado por 500 universidades públicas (Private=='No') y privadas (Private=='Yes') de EE.UU., para las cuales se observan 17 variables.
 
-Preparación de los datos: 
+Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
 
 ```{r}
-unis <- College4[, colnames(College4) != "Private"]
+datos <- College4[,-1]
 
-unis$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) #Factor y cambio de etiqueta
+datos$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) 
 
-#Proporción privada-pública
-table(unis$Tipo)
+head(datos)
 
-#Semilla
-set.seed(40)
-
-nobs <- nrow(unis) #Filas
-itrain <- sample(nobs, 0.8 * nobs) 
-train <- unis[itrain, ] # M. Entrenamiento
-test <- unis[-itrain, ] # M. Prueba
-
-tree <- rpart(Tipo ~ ., data = train)
-
-#Gráfico
-rpart.plot(tree, main = "Árbol de clasificación Privada-Pública")
 ```
 
+Además, nótese que g.
+
+```{r}
+#Proporción privada-pública
+table(datos$Tipo)
+
+```
 
 ## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) 
     en privadas (`Private="Yes"`) o públicas (`Private="No"`).
 
 ### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
-    
-```{r}
-rpart.rules(tree, style = "tall")
+  
+En primer lugar vamos a considerar el 80% de las observaciones como muestra de entrenamiento y el 20% restante como muestra de test.
 
+Establecemos la semilla igual al número de grupo multiplicado por 10, utilizando la función `set.seed` de R:
+
+```{r}
+#Semilla
+set.seed(40)
+
+nobs <- nrow(datos) #Filas
+itrain <- sample(nobs, 0.8 * nobs) 
+train <- datos[itrain, ] # M. Entrenamiento
+test <- datos[-itrain, ] # M. Test
+
+```
+
+En primer lugar obtendremos un árbol que nos permita clasificar las universidades en privadas y públicas, utilizando la muestra de entrenamiento.
+  
+```{r}
+tree<-rpart(Tipo~.,data=train)
+
+rpart.plot(tree,main="Árbol de clasificación privada-pública")
+```
+
+El resultado es un árbol con 5 nodos terminales, por lo que puede ser interesante podarlo.
+
+Para el proceso de poda seleccionaremos un paramétro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
+
+```{r}
 tree <- rpart(Tipo ~ ., data = train, cp = 0)
 plotcp(tree)
 
@@ -75,30 +99,77 @@ imin.xerror <- which.min(xerror)
 upper.xerror <- xerror[imin.xerror] + tree$cptable[imin.xerror, "xstd"]
 icp <- min(which(xerror <= upper.xerror))
 cp <- tree$cptable[icp, "CP"]
-tree <- prune(tree, cp = cp)
-
+cp
 ```
-    
+
+En primer lugar fijamos el parámetro $cp=0$, es decir, ajustamos el árbol completo. A continuación se calculan los errores de validación cruzada (reescalados) dependiendo del parámetro de complejidad empleado en el ajuste del árbol de decisión. Usando el criterio del error estándar de Breiman nos quedamos con el valor de cp que de lugar al mínimo error, en este caso $cp=0.02521008$.
+   
     
 ### b. Representar e interpretar el árbol resultante.
-    
+  
+Si podamos el árbol utilizando el valor del parámetro obtenido en el apartado anterior, obtenemos el siguiente árbol:
+
 ```{r}
-rpart.plot(tree, main = "Árbol de clasificación privada-pública")
+tree<-prune(tree,cp=cp)
+
+rpart.plot(tree, 
+           extra = 104,          # show fitted class, probs, percentages
+           box.palette = "GnBu", # color scheme
+           branch.lty = 3,       # dotted branch lines
+           shadow.col = "gray",  # shadows under the node boxes
+           main="Árbol de clasificación privada-pública",
+           nn = TRUE)
 ```
-Interpretación:
-    
+En este caso obtuvimos un árbol con 4 nodos terminales, que contienen un 24%, 8%, 6% y 62% del total de los datos respectivamente. 
+
+El nodo inicial o nodo padre contiene el total de los datos, para los cuales el 70% de los datos son universidades privadas y el 30% son públicas. Dado que la moda o mayoría de universidades son privadas clasifica como privada.
+
+A continuación el árbol se divide en dos ramas teniendo en cuenta la variable **Outstate**, es decir, el número de estudiantes de otro estado (en miles). Si el número de estudiantes de otro estado es menor que 8000 entonces clasificará como universidad pública, mientras que si es mayor clasificará como privada. 
+
+En el nodo 2 se encuentra un 32% de los datos, para los cuales el 75% son universidades públicas y el 25% privadas. 
+
+En el nodo 3 se encuentra un 68% de los datos, para los cuales el 9% de los datos son universidades públicas y el 91% son privadas. 
+
+A continuación el nodo 2 se divide en otras dos ramas teniendo en cuenta la variable **Accept**, es decir, el número de solicitudes aceptadas en escala logarítmica. Si el número de solicitudes aceptadas es mayor o igual que 6.7 entonces clasificará como universidad pública, mientras que si es menor clasificará como privada.
+
+Por otra parte el nodo 3 se divide en dos teniendo en cuenta la variable **Enroll**, es decir, el número de nuevos estudiantes matriculados en escala logarítmica. Si el número de nuevos estudiantes es mayor o igual que 7.3, el árbol clasificará como universidad pública, mientras que si es menor clasificará como universidad privada.
+
+En el primer nodo terminal se encuentra un 24% de los datos, de los cuales el 89% de las universidades son públicas y el 11% restante son privadas. Dado que hay un mayor número de universidades públicas clasifica en públicas. 
+
+En el segundo nodo terminal se encuentra un 8% de los datos, de los cuales el 29% de las universidades son públicas y el 71% restante son privadas, por lo que clasifica en privadas.
+
+En el tercer nodo terminal se encuentra un 6% de los datos, de los cuales el 77% de las universidades son públicas y el 23% restante son privadas, por lo que clasifica en públicas.
+
+En el último nodo terminal se encuentra un 62% de los datos, de los cuales el 2% de las universidades son públicas y el 98% restante son privadas, por lo que clasifica en privadas.
+
+Nótese que tanto el primer como el último nodo terminal poseen colores más oscuros, esto indica que en estos nodos la clasificación es mejor.
+
 ### c. Evaluar la precisión, de las predicciones y de las estimaciones de la probabilidad, en la muestra de test.
     
+Por último nos piden evaluar la precisión de las predicciones y de las estimaciones de la probabilidad en la muestra de test. Para ello debemos obtener las observaciones de la muestra de test y compararlas con las predicciones obtenidas con nuestro modelo.
+    
 ```{r}
-#Predicciones
-obs <- test$Tipo
-head(predict(tree, newdata = test))
-pred <- predict(tree, newdata = test, type = "class")
-table(obs, pred)
+
+obs <- test$Tipo # Observaciones
+pred <- predict(tree, newdata = test, type = "class") #Predicciones
 
 confusionMatrix(pred,obs)
 ```
-    
+En primer lugar obtenemos la matriz de confusión, donde enfrentamos observaciones frente a predicciones. En este caso hemos obtenido que el modelo clasifica bien 17 universidades públicas de un total de 24 y 70 universidades privadas de un total de 76. Luego nuestro modelo tiene una precisión de las predicciones de un 87%. 
+
+Sin embargo, hay que tener en cuenta que se trata de una muestra desbalanceada, puesto que contiene 143 universidades públicas y 357 universidades privadas. En estos casos conviene fijarse en el Kappa, que posee un valor más bajo, del 63.85%.
+
+Para calcular la precisión de las estimaciones de la probabilidad, debemos utilizar la función `pred`con la opción por defecto `type="prob":
+
+```{r}
+pred_prob <- predict(tree, newdata = test) #Estimaciones de la probabilidad
+head(pred_prob)
+```
+
+Así obtenemos la probabilidad de que cada Universidad sea pública o privada. 
+
+
+
 
 
 ## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante 
