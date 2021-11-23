@@ -32,10 +32,18 @@ packages <- c("rpart", "rpart.plot", "caret", "randomForest", "pdp", "kernlab")
 ipak(packages)
 
 # Datos
+<<<<<<< HEAD
 load("data/College4.RData")
 head(College4)
 dim(College4)
 ```
+=======
+load("College4.RData")
+head(College4,n=3)
+dim(College4)
+```
+
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 Este conjunto de datos está formado por 500 universidades públicas (Private=='No') y privadas (Private=='Yes') de EE.UU., para las cuales se observan 17 variables.
 
 Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
@@ -45,11 +53,19 @@ datos <- College4[,-1]
 
 datos$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) 
 
+<<<<<<< HEAD
 head(datos)
 
 ```
 
 Además, nótese que g.
+=======
+head(datos,n=3)
+
+```
+
+Además, nótese que:
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 ```{r}
 #Proporción privada-pública
@@ -57,8 +73,12 @@ table(datos$Tipo)
 
 ```
 
+<<<<<<< HEAD
 ## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) 
     en privadas (`Private="Yes"`) o públicas (`Private="No"`).
+=======
+## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private="Yes"`) o públicas (`Private="No"`).
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 ### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
   
@@ -120,9 +140,16 @@ rpart.plot(tree,
            main="Árbol de clasificación privada-pública",
            nn = TRUE)
 ```
+<<<<<<< HEAD
 En este caso obtuvimos un árbol con 4 nodos terminales, que contienen un 24%, 8%, 6% y 62% del total de los datos respectivamente. 
 
 El nodo inicial o nodo padre contiene el total de los datos, para los cuales el 70% de los datos son universidades privadas y el 30% son públicas. Dado que la moda o mayoría de universidades son privadas clasifica como privada.
+=======
+
+En este caso obtuvimos un árbol con 4 nodos terminales, que contienen un 24%, 8%, 6% y 62% del total de los datos respectivamente. 
+
+El nodo inicial o nodo padre contiene el total de los datos, para los cuales el 70% de los datos son universidades privadas y el 30% son públicas. Dado que la moda o mayoría de universidades son privadas, clasifica como privada.
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 A continuación el árbol se divide en dos ramas teniendo en cuenta la variable **Outstate**, es decir, el número de estudiantes de otro estado (en miles). Si el número de estudiantes de otro estado es menor que 8000 entonces clasificará como universidad pública, mientras que si es mayor clasificará como privada. 
 
@@ -157,27 +184,49 @@ confusionMatrix(pred,obs)
 ```
 En primer lugar obtenemos la matriz de confusión, donde enfrentamos observaciones frente a predicciones. En este caso hemos obtenido que el modelo clasifica bien 17 universidades públicas de un total de 24 y 70 universidades privadas de un total de 76. Luego nuestro modelo tiene una precisión de las predicciones de un 87%. 
 
+<<<<<<< HEAD
 Sin embargo, hay que tener en cuenta que se trata de una muestra desbalanceada, puesto que contiene 143 universidades públicas y 357 universidades privadas. En estos casos conviene fijarse en el Kappa, que posee un valor más bajo, del 63.85%.
 
 Para calcular la precisión de las estimaciones de la probabilidad, debemos utilizar la función `pred`con la opción por defecto `type="prob":
+=======
+Sin embargo, hay que tener en cuenta que se trata de una muestra desbalanceada, puesto que contiene 143 universidades públicas y 357 universidades privadas. En estos casos conviene fijarse en el valor de Kappa, que posee un valor más bajo, del 63.85%.
+
+Para calcular la precisión de las estimaciones de la probabilidad, debemos utilizar la función `pred` con la opción por defecto `type="prob"`:
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 ```{r}
 pred_prob <- predict(tree, newdata = test) #Estimaciones de la probabilidad
 head(pred_prob)
 ```
 
+<<<<<<< HEAD
 Así obtenemos la probabilidad de que cada Universidad sea pública o privada. 
+=======
+Así obtenemos las probabilidades estimadas de que cada Universidad sea pública o privada. 
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 
 
 
 
+<<<<<<< HEAD
 ## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante 
     el método `"rf"` del paquete `caret`.
 
 ### a. Considerar 300 árboles y seleccionar el número de predictores empleados en cada división `mtry = c(1, 2, 4, 6)` mediante validación cruzada, con 10 grupos y empleando el criterio de un error  estándar de Breiman.
     
 ```{r}
+=======
+## 2.  Realizar la clasificación anterior empleando Bosques Aleatorios mediante el método `"rf"` del paquete `caret`.
+
+### a. Considerar 300 árboles y seleccionar el número de predictores empleados en cada división `mtry = c(1, 2, 4, 6)` mediante validación cruzada, con 10 grupos y empleando el criterio de un error  estándar de Breiman.
+ 
+Para seleccionar el valor de `mtry` mediante validación cruzada, se crea en primer lugar una rejilla con los valores que se van a considerar. El argumento `trControl`  de la función `train` permite seleccionar el método de validación cruzada (`method="cv"`) junto con el criterio de un error estandar (`selectionFunction="oneSE"`).
+
+```{r}
+set.seed(40)
+
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 tuneGrid <- data.frame(mtry = c(1, 2, 4, 6))
 
 rf.caret <-
@@ -194,10 +243,19 @@ rf.caret <-
         )
     )
 
+<<<<<<< HEAD
 final <- rf.caret$finalModel
 
 ```
 
+=======
+final <- rf.caret$finalModel;final
+
+```
+
+El criterio de validación cruzada ha seleccionado como mejor modelo el que considera `mtry=1`. Los errores de clasificación marginales son del 15.1% para las universidades públicas y del 2.1% para las privadas. Esta diferencia posiblemente se deba al hecho de que la muestra está desbalanceada.
+
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 ### b. Representar la convergencia del error en las muestras OOB en el modelo final.
     
 ```{r}
@@ -208,13 +266,29 @@ legend("topright",
        col = 1:6)
 ```
     
+<<<<<<< HEAD
     
 ### c. Estudiar la importancia de las variables y el efecto de las principales empleando algún método gráfico (para la interpretación del modelo).
+=======
+No parece haber problemas de convergencia del error en las muestras OOB para el modelo con 300 árboles. Esta tasa de error se estabiliza en torno al 6%.
+    
+### c. Estudiar la importancia de las variables y el efecto de las principales empleando algún método gráfico (para la interpretación del modelo).
+
+Se obtiene la importancia de las variables predictoras mediante la función `importance()` de `randomForest`. También se pueden representar gráficamente con `varImpPlot()`.
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
     
 ```{r}
 importance(final)
 varImpPlot(final)
+<<<<<<< HEAD
 
+=======
+```
+ 
+La variable predictora más importante, con cierta diferencia sobre las demás, es **Outstate**. Le siguen **Enroll** y **P.Undergrad**. Para estudiar el efecto de estas variables predictoras en la respuesta, se pueden generar mediante el paquete `pdp` unos gráficos PDP que estiman los efectos individuales de los predictores. Se muestran a continuación los gráficos para las dos variables con mayor importancia, **Outstate** y **Enroll**:
+ 
+```{r}
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 pdp1 <- partial(final, "Outstate", train = train)
 p1 <- plotPartial(pdp1)
 
@@ -222,7 +296,12 @@ pdp2 <- partial(final, "Enroll", train = train)
 p2 <- plotPartial(pdp2)
 grid.arrange(p1, p2, ncol = 2)
 ```
+<<<<<<< HEAD
     
+=======
+
+Se observa en este gráfico que la variable **Outstate** se relaciona con la respuesta de manera inversa a **Enroll**. Como ya vimos en los árboles de clasificación del primer ejercicio, valores altos de **Outstate** (es decir, un número elevado de alumnos de otros estados) se relacionan con las universidades privadas, mientras que los valores altos de **Enroll** (es decir, un número elevado de nuevas admisiones) se relacionan más con las universidades públicas.
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 ### d. Evaluar la precisión de las predicciones en la muestra de test y comparar los resultados con los obtenidos con el modelo del ejercicio anterior.
     
@@ -234,18 +313,29 @@ table(obs, pred)
 
 confusionMatrix(pred, obs)
 ```
+<<<<<<< HEAD
     
+=======
+
+La matriz de confusión del nuevo modelo indica que se clasifican correctamente 18 de las 24 universidades públicas y 72 de las 76 universidades privadas. Esto supone una cierta mejora con respecto al modelo del ejercicio 1, como refleja el aumento en la precisión (90% frente al 87% anterior) así como en el valor de Kappa (71.7% frente al 63.8% anterior).
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 
 
 ## 3.  Realizar la clasificación anterior empleando SVM mediante la función `ksvm()` del paquete `kernlab`,
 
 ### a. Ajustar el modelo con las opciones por defecto.
     
+<<<<<<< HEAD
+=======
+En primer lugar, vamos a ajustar el modelo con los ajustes por defecto que trae la función `ksvm` del paquete `kernlab`, es decir, indicarle la fórmula (`Tipo~.`), y los datos de entrenamiento que se emplean para la clasificación (`train`).
+    
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 ```{r}
 set.seed(40)
 svm <- ksvm(Tipo ~ ., data = train)
 svm
 
+<<<<<<< HEAD
 pred <- predict(svm, newdata = test)
 confusionMatrix(pred, test$Tipo)
 
@@ -254,13 +344,40 @@ confusionMatrix(pred, test$Tipo)
     
 ### b. Ajustar el modelo empleando validación cruzada con 10 grupos para seleccionar los valores "óptimos" de los hiperparámetros, considerando las posibles combinaciones de `sigma = c(0.01, 0.05, 0.1)` y `C = c(0.5, 1, 10)` (sin emplear el  paquete `caret`; ver Ejercicio 3.1 en *03-bagging_boosting-ejercicios.html*).
     
+=======
+dim(train)
+```
+
+Observamos que por defecto emplea el parámetro de coste `C = 1`. Calcula $\hat{\sigma} = 0.054$, que es la inversa de la ventana; y emplea 114 vectores soporte, que es aprox. el $50\%$ de los datos.
+
+Podemos realizar predicciones con la función `predict` del paquete base de R. Con el modelo ajustado `svm`, y con el conjunto de datos de test obtenemos las predicciones.
+    
+```{r}
+pred <- predict(svm, newdata = test)
+```
+    
+En el apartado c) analizaremos la precisión de las predicciones del modelo ajustado en este apartado.
+    
+### b. Ajustar el modelo empleando validación cruzada con 10 grupos para seleccionar los valores "óptimos" de los hiperparámetros, considerando las posibles combinaciones de `sigma = c(0.01, 0.05, 0.1)` y `C = c(0.5, 1, 10)` (sin emplear el  paquete `caret`; ver Ejercicio 3.1 en *03-bagging_boosting-ejercicios.html*).
+
+En primer lugar, creamos el grid con todas las combinaciones posibles de los hiperparámetros.    
+
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 ```{r}
 tune.grid <- expand.grid(
     sigma = c(0.01, 0.05, 0.1),
     C = c(0.5, 1, 10),
     error = NA
 )
+<<<<<<< HEAD
 
+=======
+```
+
+A continuación, como se realiza de forma análoga en *03-bagging_boosting-ejercicios.html*, ajustamos un modelo con cada combinación de hiperparámetros, comprobando en cada iteración si hay una mejora en el modelo.
+    
+```{r}
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
 best.err <- Inf
 set.seed(40)
 for (i in 1:nrow(tune.grid)) {
@@ -280,6 +397,7 @@ for (i in 1:nrow(tune.grid)) {
         best.tune <- tune.grid[i,]
     }
 }
+<<<<<<< HEAD
 
 final.model
 
@@ -291,3 +409,32 @@ confusionMatrix(pred2, test$Tipo)
      
 ### c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
      
+=======
+```
+    
+Además de obtener el ajuste que se requería, obtenemos los errores para cada combinación (almacenados en `tune.grid`). El ajuste elegido es el que genera un menor error, y para ver con qué combinación de hiperparámetros se ajusta el modelo podemos consultar `best.tune`:
+```{r}
+best.tune
+```
+
+Observamos que el mejor modelo es el que emplea $\sigma = 0.01$, y un parámetro de coste $C = 0.5$. Podemos comprobar el ajuste:
+  
+```{r}
+final.model
+```
+    
+De la misma forma que en el apartado a), podemos realizar predicciones con la función `predict`, el ajuste `final.model`, y el conjunto de datos de test.
+    
+```{r}
+pred2 <- predict(final.model, newdata = test)
+```
+    
+En el próximo apartado mediremos tanto su capacidad predictiva, como la del ajuste calculado en el apartado anterior. Además, compararemos los modelos obtenidos en este ejercicio, con los del ejercicio 2.
+     
+### c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
+En primer lugar, evaluaremos la precisión del modelo obtenido 
+
+```{r}
+confusionMatrix(pred, test$Tipo)
+```
+>>>>>>> df9b4238afc7bc03cc5faa316e71fc996f14d3d0
