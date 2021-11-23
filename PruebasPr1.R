@@ -75,7 +75,7 @@ p2<-plotPartial(pdp2)
 grid.arrange(p1,p2,ncol=2)
 
 
-#####Falta con la librería vivi
+######Falta con la librería vivi
 
 #Apartado d)
 obs<-test$Tipo
