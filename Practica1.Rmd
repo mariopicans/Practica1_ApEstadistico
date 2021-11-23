@@ -34,11 +34,10 @@ ipak(packages)
 ```
 ```{r, warning=F, message=F}
 # Datos
-load("College4.RData")
-head(College4,n=3)
+load("data/College4.RData")
+head(College4, n = 3)
 dim(College4)
 ```
-Este conjunto de datos está formado por 500 universidades públicas (Private=='No') y privadas (Private=='Yes') de EE.UU., para las cuales se observan 17 variables.
 
 Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
 
@@ -47,7 +46,7 @@ datos <- College4[,-1]
 
 datos$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) 
 
-head(datos,n=3)
+head(datos,n = 3)
 
 ```
 
@@ -59,7 +58,7 @@ table(datos$Tipo)
 
 ```
 
-## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private="Yes"`) o públicas (`Private="No"`).
+## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private = "Yes"`) o públicas (`Private = "No"`).
 
 ### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
   
