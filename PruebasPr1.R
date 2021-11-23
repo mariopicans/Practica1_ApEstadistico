@@ -95,7 +95,7 @@ caret::confusionMatrix(pred,obs)
 library(kernlab)
 set.seed(40)
 svm<-ksvm(Tipo~.,data=train)
-svm
+svm #Param C = 1; Sigma = 0.05438
 
 pred<-predict(svm,newdata=test)
 caret::confusionMatrix(pred,test$Tipo)
@@ -117,7 +117,7 @@ for (i in 1:nrow(tune.grid)){
   }
 }
 
-final.model
+final.model # Param. C = 0.5; sigma = 0.01
 
 pred2<-predict(final.model,newdata=test)
 caret::confusionMatrix(pred2,test$Tipo)
