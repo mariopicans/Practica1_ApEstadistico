@@ -25,24 +25,30 @@ ipak <- function(pkg){
         new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
         if (length(new.pkg)) 
                 install.packages(new.pkg, dependencies = TRUE)
-        sapply(pkg, require, character.only = TRUE)
-}
+        sapply(pkg, require, character.only = TRUE)}
+```
+```{r, warning=F, message=F,results='hide'}
+# Librerías 
 packages <- c("rpart", "rpart.plot", "caret", "randomForest", "pdp", "kernlab")
 ipak(packages)
+```
+```{r, warning=F, message=F}
 # Datos
-load("data/College4.RData")
+load("College4.RData")
 head(College4,n=3)
 dim(College4)
 ```
-
 Este conjunto de datos está formado por 500 universidades públicas (Private=='No') y privadas (Private=='Yes') de EE.UU., para las cuales se observan 17 variables.
 
 Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
 
 ```{r}
 datos <- College4[,-1]
+
 datos$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) 
+
 head(datos,n=3)
+
 ```
 
 Además, nótese que:
@@ -50,6 +56,7 @@ Además, nótese que:
 ```{r}
 #Proporción privada-pública
 table(datos$Tipo)
+
 ```
 
 ## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private="Yes"`) o públicas (`Private="No"`).
@@ -63,16 +70,19 @@ Establecemos la semilla igual al número de grupo multiplicado por 10, utilizand
 ```{r}
 #Semilla
 set.seed(40)
+
 nobs <- nrow(datos) #Filas
 itrain <- sample(nobs, 0.8 * nobs) 
 train <- datos[itrain, ] # M. Entrenamiento
 test <- datos[-itrain, ] # M. Test
+
 ```
 
 En primer lugar obtendremos un árbol que nos permita clasificar las universidades en privadas y públicas, utilizando la muestra de entrenamiento.
   
-```{r}
+```{r,out.width="60%"}
 tree<-rpart(Tipo~.,data=train)
+
 rpart.plot(tree,main="Árbol de clasificación privada-pública")
 ```
 
@@ -80,9 +90,11 @@ El resultado es un árbol con 5 nodos terminales, por lo que puede ser interesan
 
 Para el proceso de poda seleccionaremos un paramétro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
 
-```{r}
+```{r,out.width="60%"}
 tree <- rpart(Tipo ~ ., data = train, cp = 0)
 plotcp(tree)
+
+
 xerror <- tree$cptable[,"xerror"]
 imin.xerror <- which.min(xerror)
 upper.xerror <- xerror[imin.xerror] + tree$cptable[imin.xerror, "xstd"]
@@ -98,8 +110,9 @@ En primer lugar fijamos el parámetro $cp=0$, es decir, ajustamos el árbol comp
   
 Si podamos el árbol utilizando el valor del parámetro obtenido en el apartado anterior, obtenemos el siguiente árbol:
 
-```{r}
+```{r,out.width="60%"}
 tree<-prune(tree,cp=cp)
+
 rpart.plot(tree, 
            extra = 104,          # show fitted class, probs, percentages
            box.palette = "GnBu", # color scheme
@@ -135,11 +148,13 @@ Nótese que tanto el primer como el último nodo terminal poseen colores más os
 
 ### c. Evaluar la precisión, de las predicciones y de las estimaciones de la probabilidad, en la muestra de test.
     
-Por último nos piden evaluar la precisión de las predicciones y de las estimaciones de la probabilidad en la muestra de test. Para ello debemos obtener las observaciones de la muestra de test y compararlas con las predicciones obtenidas con nuestro modelo.
+Por último, nos piden evaluar la precisión de las predicciones y de las estimaciones de la probabilidad en la muestra de test. Para ello debemos obtener las observaciones de la muestra de test y compararlas con las predicciones obtenidas con nuestro modelo.
     
 ```{r}
+
 obs <- test$Tipo # Observaciones
 pred <- predict(tree, newdata = test, type = "class") #Predicciones
+
 confusionMatrix(pred,obs)
 ```
 En primer lugar obtenemos la matriz de confusión, donde enfrentamos observaciones frente a predicciones. En este caso hemos obtenido que el modelo clasifica bien 17 universidades públicas de un total de 24 y 70 universidades privadas de un total de 76. Luego nuestro modelo tiene una precisión de las predicciones de un 87%. 
@@ -167,7 +182,9 @@ Para seleccionar el valor de `mtry` mediante validación cruzada, se crea en pri
 
 ```{r}
 set.seed(40)
+
 tuneGrid <- data.frame(mtry = c(1, 2, 4, 6))
+
 rf.caret <-
     train(
         Tipo ~ .,
@@ -181,14 +198,16 @@ rf.caret <-
             selectionFunction = "oneSE"
         )
     )
+
 final <- rf.caret$finalModel;final
+
 ```
 
 El criterio de validación cruzada ha seleccionado como mejor modelo el que considera `mtry=1`. Los errores de clasificación marginales son del 15.1% para las universidades públicas y del 2.1% para las privadas. Esta diferencia posiblemente se deba al hecho de que la muestra está desbalanceada.
 
 ### b. Representar la convergencia del error en las muestras OOB en el modelo final.
     
-```{r}
+```{r,out.width="60%"}
 plot(final, main = "Tasas de error OOB")
 legend("topright",
        colnames(final$err.rate),
@@ -202,16 +221,17 @@ No parece haber problemas de convergencia del error en las muestras OOB para el 
 
 Se obtiene la importancia de las variables predictoras mediante la función `importance()` de `randomForest`. También se pueden representar gráficamente con `varImpPlot()`.
     
-```{r}
+```{r,out.width="60%"}
 importance(final)
 varImpPlot(final)
 ```
  
 La variable predictora más importante, con cierta diferencia sobre las demás, es **Outstate**. Le siguen **Enroll** y **P.Undergrad**. Para estudiar el efecto de estas variables predictoras en la respuesta, se pueden generar mediante el paquete `pdp` unos gráficos PDP que estiman los efectos individuales de los predictores. Se muestran a continuación los gráficos para las dos variables con mayor importancia, **Outstate** y **Enroll**:
  
-```{r}
+```{r,out.width="60%"}
 pdp1 <- partial(final, "Outstate", train = train)
 p1 <- plotPartial(pdp1)
+
 pdp2 <- partial(final, "Enroll", train = train)
 p2 <- plotPartial(pdp2)
 grid.arrange(p1, p2, ncol = 2)
@@ -226,6 +246,7 @@ obs <- test$Tipo
 head(predict(final, newdata = test))
 pred <- predict(final, newdata = test, type = "class")
 table(obs, pred)
+
 confusionMatrix(pred, obs)
 ```
 
@@ -242,6 +263,7 @@ En primer lugar, vamos a ajustar el modelo con los ajustes por defecto que trae 
 set.seed(40)
 svm <- ksvm(Tipo ~ ., data = train)
 svm
+
 dim(train)
 ```
 
@@ -292,7 +314,6 @@ for (i in 1:nrow(tune.grid)) {
 ```
     
 Además de obtener el ajuste que se requería, obtenemos los errores para cada combinación (almacenados en `tune.grid`). El ajuste elegido es el que genera un menor error, y para ver con qué combinación de hiperparámetros se ajusta el modelo podemos consultar `best.tune`:
-
 ```{r}
 best.tune
 ```
