@@ -2,7 +2,7 @@ library(rpart)
 library(rpart.plot)
 library(caret)
 
-load("College4.RData")
+load("data/College4.RData")
 head(College4)
 
 unis<-College4[,colnames(College4)!="Private"]
