@@ -94,11 +94,15 @@ caret::confusionMatrix(pred,obs)
 #Apartado a)
 library(kernlab)
 set.seed(40)
-svm<-ksvm(Tipo~.,data=train)
+svm<-ksvm(Tipo~.,data=train,prob.model=TRUE)
 svm #Param C = 1; Sigma = 0.05438
 
 pred<-predict(svm,newdata=test)
 caret::confusionMatrix(pred,test$Tipo)
+
+#Comprobación de las probabilidades
+p.est.1<-predict(svm,newdata = test, type = "probabilities")
+head(p.est.1)
 
 
 #Apartado b)
@@ -107,7 +111,7 @@ tune.grid<-expand.grid(sigma=c(0.01,0.05,0.1),C=c(0.5,1,10),error=NA)
 best.err <- Inf
 set.seed(40)
 for (i in 1:nrow(tune.grid)){
-  fit<-ksvm(Tipo~.,data=train[,],cross=10,C=tune.grid$C[i],kpar=list(tune.grid$sigma[i]))
+  fit<-ksvm(Tipo~.,prob.model=TRUE,data=train[,],cross=10,C=tune.grid$C[i],kpar=list(tune.grid$sigma[i]))
   fit.error<-fit@cross
   tune.grid$error[i] <- fit.error
   if (fit.error < best.err) {
@@ -121,3 +125,8 @@ final.model # Param. C = 0.5; sigma = 0.01
 
 pred2<-predict(final.model,newdata=test)
 caret::confusionMatrix(pred2,test$Tipo)
+
+#Comprobación de las probabilidades
+p.est.2<-predict(final.model,newdata = test, type = "probabilities")
+head(p.est.2)
+
