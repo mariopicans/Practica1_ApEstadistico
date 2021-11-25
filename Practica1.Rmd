@@ -333,14 +333,43 @@ pred2 <- predict(final.model, newdata = test)
 En el próximo apartado mediremos tanto su capacidad predictiva, como la del ajuste calculado en el apartado anterior. Además, compararemos los modelos obtenidos en este ejercicio, con los del ejercicio 2.
      
 ### c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
+
 En primer lugar, evaluaremos la precisión del modelo obtenido las matrices de confusión de las dos predicciones. Lo realizamos con la función `confusionMatrix` del paquete `caret`:
 
 ```{r}
+# Predicción con el modelo por defecto (C = 1, sigma = 0.05438):
 caret::confusionMatrix(pred, test$Tipo)
 ```
 
 
 ```{r}
+# Predicción con el modelo del apartado b) (C=0.05, sigma = 0.01):
 caret::confusionMatrix(pred2,test$Tipo)
 ```
+
+Como podemos observar, se realiza la misma predicción con los dos modelos:
+
+```{r,echo=FALSE}
+table(obs,pred)
+```
+
+Y por tanto, obtenemos la misma precisión del modelo ($92\%$),kappa ($0.7743$), sensibilidad y especificidad en las dos matrices de confusión. Obtener exactamente la misma predicción puede parecer razonable, ya que predecimos entre dos clases (`Privada` o `Pública`). Para asegurarnos de que no hemos hecho nada mal en la construcción de los modelos, comprobamos las probabilidades de las dos predicciones:
+
+```{r}
+#Comprobación de las probabilidades del primer modelo (por defecto):
+
+p.est.1<-predict(svm,newdata = test, type = "probabilities")
+head(p.est.1)
+
+#Comprobación de las probabilidades del segundo modelo (apartado b):
+
+p.est.2<-predict(final.model,newdata = test, type = "probabilities")
+head(p.est.2)
+```
+
+Como se puede observar en los resultados, las probabilidades con las que clasifica no son las mismas, por tanto, no "predicen" igual los dos modelos, aunque luego clasifiquen cada una de las observaciones de la muestra de test en la misma clase (siempre con una probabilidad superior a $0.9$).
+
+Respecto a lo obtenido en el ejercicio 2, con estas predicciones mejoramos ligeramente la precisión ($0.92$ frente a $0.9$), la especifidad ($0.96$ frente a $0.94$), y la kappa de Cohen ($0.77$ frente a $0.71$). También se mejora la sensibilidad ($0.79$ frente a $0.75$), pero con valores por debajo del $80\%$.
+
+
 
