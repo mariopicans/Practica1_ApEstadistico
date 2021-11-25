@@ -79,7 +79,7 @@ test <- datos[-itrain, ] # M. Test
 
 En primer lugar obtendremos un árbol que nos permita clasificar las universidades en privadas y públicas, utilizando la muestra de entrenamiento.
   
-```{r,out.width="60%"}
+```{r,out.width="60%",fig.align='center'}
 tree<-rpart(Tipo~.,data=train)
 
 rpart.plot(tree,main="Árbol de clasificación privada-pública")
@@ -89,7 +89,7 @@ El resultado es un árbol con 5 nodos terminales, por lo que puede ser interesan
 
 Para el proceso de poda seleccionaremos un paramétro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
 
-```{r,out.width="60%"}
+```{r,out.width="60%",fig.align='center'}
 tree <- rpart(Tipo ~ ., data = train, cp = 0)
 plotcp(tree)
 
@@ -109,7 +109,7 @@ En primer lugar fijamos el parámetro $cp=0$, es decir, ajustamos el árbol comp
   
 Si podamos el árbol utilizando el valor del parámetro obtenido en el apartado anterior, obtenemos el siguiente árbol:
 
-```{r,out.width="60%"}
+```{r,out.width="60%",fig.align='center'}
 tree<-prune(tree,cp=cp)
 
 rpart.plot(tree, 
@@ -160,14 +160,23 @@ En primer lugar obtenemos la matriz de confusión, donde enfrentamos observacion
 
 Sin embargo, hay que tener en cuenta que se trata de una muestra desbalanceada, puesto que contiene 143 universidades públicas y 357 universidades privadas. En estos casos conviene fijarse en el valor de Kappa, que posee un valor más bajo, del 63.85%.
 
-Para calcular la precisión de las estimaciones de la probabilidad, debemos utilizar la función `pred` con la opción por defecto `type="prob"`:
+Para calcular la precisión de las estimaciones de la probabilidad, debemos obtener las probabilidades estimadas de que cada Universidad sea pública o privada. Para ello usaremos la función `pred` con la opción por defecto `type="prob"`:
 
 ```{r}
 pred_prob <- predict(tree, newdata = test) #Estimaciones de la probabilidad
 head(pred_prob)
 ```
 
-Así obtenemos las probabilidades estimadas de que cada Universidad sea pública o privada. 
+Para evaluar las estimaciones de las probabilidades usaremos la curva ROC. Utilizaremos como punto de corte $c=0.5$ para clasificar en la categoría de interés, puesto que tan sólo tenemos dos categorías, pública y privada. 
+
+```{r fig.align="center",out.width="60%"}
+library(pROC)
+roc_tree<-roc(response=obs,predictor=pred_prob[,1])
+plot(roc_tree)
+roc_tree
+```
+
+En la curva ROC se representa la sensibilidad frente a la tasa de falsos negativos para distintos valores de corte. En nuestro caso, la curva se aproxima bastante a la esquina superior izquierda, lo que indica un valor alto de sensibilidad y especifidad. Además, el área bajo la curva ROC es 0.9339, muy próximo a 1, por lo que se trata de un buen clasificador.
 
 
 
@@ -206,7 +215,7 @@ El criterio de validación cruzada ha seleccionado como mejor modelo el que cons
 
 ### b. Representar la convergencia del error en las muestras OOB en el modelo final.
     
-```{r,out.width="60%"}
+```{r,out.width="60%",fig.align='center'}
 plot(final, main = "Tasas de error OOB")
 legend("topright",
        colnames(final$err.rate),
@@ -227,7 +236,7 @@ varImpPlot(final)
  
 La variable predictora más importante, con cierta diferencia sobre las demás, es **Outstate**. Le siguen **Enroll** y **P.Undergrad**. Para estudiar el efecto de estas variables predictoras en la respuesta, se pueden generar mediante el paquete `pdp` unos gráficos PDP que estiman los efectos individuales de los predictores. Se muestran a continuación los gráficos para las dos variables con mayor importancia, **Outstate** y **Enroll**:
  
-```{r,out.width="60%"}
+```{r,out.width="60%",fig.align='center'}
 pdp1 <- partial(final, "Outstate", train = train)
 p1 <- plotPartial(pdp1)
 
