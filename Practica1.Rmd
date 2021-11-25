@@ -39,9 +39,9 @@ head(College4, n = 3)
 dim(College4)
 ```
 
-Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
+Nuestro conjunto de datos contiene 500 universidades, para las cuales se observan 17 variables. Para mejorar la interpretación de los resultados modificaremos la variable tipo de Universidad, **Private**, de modo que 'Yes' sea Privada y 'No' sea Pública.
 
-```{r}
+```{r,warning=F,message=F,results='hide',echo=F}
 datos <- College4[,-1]
 
 datos$Tipo <- factor(College4$Private == "Yes", labels = c("Pública", "Privada")) 
@@ -50,7 +50,7 @@ head(datos,n = 3)
 
 ```
 
-Además, nótese que:
+Además, nótese que la proporción de universidades públicas y privadas no está balanceada:
 
 ```{r}
 #Proporción privada-pública
@@ -60,9 +60,9 @@ table(datos$Tipo)
 
 ## 1.  Obtener un árbol de decisión que permita clasificar las observaciones (universidades) en privadas (`Private = "Yes"`) o públicas (`Private = "No"`).
 
-### a. Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
+### a) Seleccionar el parámetro de complejidad de forma automática, siguiendo el criterio de un error estándar de Breiman et al. (1984).
   
-En primer lugar vamos a considerar el 80% de las observaciones como muestra de entrenamiento y el 20% restante como muestra de test.
+Comenzamos considerando el 80% de las observaciones como muestra de entrenamiento y el 20% restante como muestra de test.
 
 Establecemos la semilla igual al número de grupo multiplicado por 10, utilizando la función `set.seed` de R:
 
@@ -76,8 +76,7 @@ train <- datos[itrain, ] # M. Entrenamiento
 test <- datos[-itrain, ] # M. Test
 
 ```
-
-En primer lugar obtendremos un árbol que nos permita clasificar las universidades en privadas y públicas, utilizando la muestra de entrenamiento.
+A continuación, obtendremos un árbol que nos permita clasificar las universidades en privadas y públicas, utilizando la muestra de entrenamiento.
   
 ```{r,out.width="60%",fig.align='center'}
 tree<-rpart(Tipo~.,data=train)
@@ -105,7 +104,7 @@ cp
 En primer lugar fijamos el parámetro $cp=0$, es decir, ajustamos el árbol completo. A continuación se calculan los errores de validación cruzada (reescalados) dependiendo del parámetro de complejidad empleado en el ajuste del árbol de decisión. Usando el criterio del error estándar de Breiman nos quedamos con el valor de cp que de lugar al mínimo error, en este caso $cp=0.02521008$.
    
     
-### b. Representar e interpretar el árbol resultante.
+### b) Representar e interpretar el árbol resultante.
   
 Si podamos el árbol utilizando el valor del parámetro obtenido en el apartado anterior, obtenemos el siguiente árbol:
 
