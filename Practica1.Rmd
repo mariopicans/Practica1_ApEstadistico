@@ -260,7 +260,7 @@ En primer lugar, vamos a ajustar el modelo con los ajustes por defecto que trae 
     
 ```{r}
 set.seed(40)
-svm <- ksvm(Tipo ~ ., data = train)
+svm <- ksvm(Tipo ~ ., data = train,prob.model=TRUE)
 svm
 
 dim(train)
@@ -297,6 +297,7 @@ for (i in 1:nrow(tune.grid)) {
     fit <-
         ksvm(
             Tipo ~ .,
+            prob.model=TRUE,
             data = train[, ],
             cross = 10,
             C = tune.grid$C[i],
@@ -332,8 +333,14 @@ pred2 <- predict(final.model, newdata = test)
 En el próximo apartado mediremos tanto su capacidad predictiva, como la del ajuste calculado en el apartado anterior. Además, compararemos los modelos obtenidos en este ejercicio, con los del ejercicio 2.
      
 ### c. Evaluar la precisión de las predicciones de ambos modelos en la muestra de test y comparar también los resultados con los obtenidos en el ejercicio anterior. 
-En primer lugar, evaluaremos la precisión del modelo obtenido 
+En primer lugar, evaluaremos la precisión del modelo obtenido las matrices de confusión de las dos predicciones. Lo realizamos con la función `confusionMatrix` del paquete `caret`:
 
 ```{r}
-confusionMatrix(pred, test$Tipo)
+caret::confusionMatrix(pred, test$Tipo)
 ```
+
+
+```{r}
+caret::confusionMatrix(pred2,test$Tipo)
+```
+
