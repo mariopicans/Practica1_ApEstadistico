@@ -130,3 +130,12 @@ caret::confusionMatrix(pred2,test$Tipo)
 p.est.2<-predict(final.model,newdata = test, type = "probabilities")
 head(p.est.2)
 
+
+#Comparación importancia
+library(vivid)
+library(vip)
+fit_rf  <- vivi(data = test, fit = final.model, response = "Tipo", importanceType = "%IncMSE")
+
+
+fit_rf
+viviHeatmap(mat=fit_rf[1:5,1:5])
