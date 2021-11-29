@@ -361,7 +361,7 @@ Como podemos observar, se realiza la misma predicción con los dos modelos:
 table(obs,pred)
 ```
 
-Y por tanto, obtenemos la misma precisión del modelo ($92\%$),kappa ($0.7743$), sensibilidad y especificidad en las dos matrices de confusión. Obtener exactamente la misma predicción puede parecer razonable, ya que predecimos entre dos clases (`Privada` o `Pública`). Para asegurarnos de que no hemos hecho nada mal en la construcción de los modelos, comprobamos las probabilidades de las dos predicciones:
+Y por tanto, obtenemos la misma precisión del modelo ($92\%$), kappa ($0.7743$), sensibilidad y especificidad en las dos matrices de confusión. Obtener exactamente la misma predicción puede parecer razonable, ya que predecimos entre dos clases (`Privada` o `Pública`). Para asegurarnos de que no hemos hecho nada mal en la construcción de los modelos, comprobamos las probabilidades de las dos predicciones:
 
 ```{r}
 #Comprobación de las probabilidades del primer modelo (por defecto):

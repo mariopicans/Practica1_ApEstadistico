@@ -11,6 +11,9 @@ unis$Tipo<-factor(College4$Private=="Yes",labels=c('Pública','Privada'))
 head(unis)
 table(unis$Tipo)
 
+#Ejercicio 1
+#Apartado a)
+
 set.seed(40)
 nobs<-nrow(unis)
 itrain<-sample(nobs,0.8*nobs)
@@ -33,9 +36,21 @@ imin.xerror<-which.min(xerror)
 upper.xerror<-xerror[imin.xerror]+tree$cptable[imin.xerror,"xstd"]
 icp<-min(which(xerror<=upper.xerror))
 cp<-tree$cptable[icp,"CP"]
+
+
+#Apartado b)
+
 tree<-prune(tree,cp=cp)
 
-rpart.plot(tree,main="Árbol de clasificación privada-pública")
+rpart.plot(tree, 
+           extra = 104,          # show fitted class, probs, percentages
+           box.palette = "GnBu", # color scheme
+           branch.lty = 3,       # dotted branch lines
+           shadow.col = "gray",  # shadows under the node boxes
+           main="Árbol de clasificación privada-pública",
+           nn = TRUE)
+
+#Apartado c)
 
 #Predicciones
 obs<-test$Tipo
@@ -44,6 +59,11 @@ pred<-predict(tree,newdata=test,type="class")
 table(obs,pred)
 
 caret::confusionMatrix(pred,obs)
+
+library(pROC)
+roc_tree<-roc(response=obs,predictor=pred_prob[,1])
+plot(roc_tree)
+roc_tree
 
 
 
@@ -129,13 +149,3 @@ caret::confusionMatrix(pred2,test$Tipo)
 #Comprobación de las probabilidades
 p.est.2<-predict(final.model,newdata = test, type = "probabilities")
 head(p.est.2)
-
-
-#Comparación importancia
-library(vivid)
-library(vip)
-fit_rf  <- vivi(data = test, fit = final.model, response = "Tipo", importanceType = "%IncMSE")
-
-
-fit_rf
-viviHeatmap(mat=fit_rf[1:5,1:5])
